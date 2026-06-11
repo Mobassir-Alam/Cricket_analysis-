@@ -1,0 +1,200 @@
+/*
+--------------------------------------------
+ANALYSIS: QUESTION AND ANSWERS
+--------------------------------------------
+PURPOSE:
+	THESE SCRIPTS SHOWS THE ANALYSIS FOR THE DIFFERENT LEVEL OF QUESTIONS IN SQL SERVER STARTING FROM EASY TO HARD.
+*/
+
+
+--Who are the top 10 run-scorers of all time in ODIs?
+
+SELECT TOP 10
+	player,
+	country,
+	matches,
+	runs
+FROM odi.batting_clean 
+ORDER BY runs DESC
+
+--FINDINGS: SR Tendulkar leads with 18246 runs followed by KC Sangakkara, RT Pontingand so on.
+
+--Which batters have scored the most centuries (100s)?
+SELECT TOP 5
+	player,
+	country,
+	matches,
+	hundereds
+FROM odi.batting_clean
+ORDER BY hundereds DESC
+
+--FINDINGS: SR Tendulkar has the most 100s followed by V kohli and so on.
+
+--Which country has the most batters in this dataset?
+
+SELECT 
+	country,
+	COUNT(country) no_of_players
+FROM odi.batting_clean
+GROUP BY country
+ORDER BY COUNT(country) DESC
+
+--FINDINGS: ENG has the most players in this dataset
+
+--Find batters who scored 5000+ runs but have a strike rate below 75 — the "slow but consistent" profile.
+
+SELECT 
+	player,
+	runs,
+	strike_rate
+FROM odi.batting_clean
+WHERE runs > 5000 AND strike_rate <= 75
+ORDER BY runs DESC
+
+--FINDINGS: Inzamam-ul-Haq has scored most runs with SR below 75.
+
+--Which batters have the best average but also the most ducks? (High risk, high reward)
+
+SELECT 
+	player,
+	average,
+	duck
+FROM odi.batting_clean
+WHERE average >= 35 AND duck >= 10
+ORDER BY duck DESC, average DESC
+
+--FINDINGS: CH Gayle has the best average but the most ducks as well.
+
+
+--Rank every batter within their country by total runs using RANK().
+
+SELECT 
+	player,
+	country,
+	runs,
+	RANK() OVER(PARTITION BY country ORDER BY runs DESC) rank
+FROM odi.batting_clean
+
+--ANALYSIS: All players ranked within their country
+
+--Get the top 3 run-scorers per country using a CTE + ROW_NUMBER().
+
+WITH cta AS (
+SELECT 
+	player,
+	country,
+	runs,
+	ROW_NUMBER() OVER(PARTITION BY country ORDER BY runs DESC) rank_player
+FROM odi.batting_clean
+)
+SELECT 
+	*
+FROM cta 
+WHERE rank_player IN (1,2,3)
+
+--ANALYSIS: Top 3 players from All countries.
+
+
+--Top 10 wicket-takers with at least 100 matches played.
+
+SELECT TOP 10
+	player,
+	matches,
+	wkts
+FROM odi.bowling_clean
+WHERE matches >= 100
+ORDER BY wkts DESC
+
+-- FINDINGS: M Muralitharan has the most wickets with atleast 100 matches played.
+
+--Who has the best bowling economy rate (min 50 matches)? 
+
+SELECT
+	player,
+	matches,
+	innings,
+	country,
+	economy
+FROM odi.bowling_clean
+WHERE matches > 50 AND economy > 0 AND innings > 10
+ORDER BY economy ASC
+
+--FINDING: J Garner has the best economy.
+
+
+
+--Create a custom "Bowling Score" = (Wkts × 2) − (Ave × 0.5) + (5w × 10). Who scores highest?
+
+SELECT 
+	player,
+	wkts,
+	average,
+	five_wkt_haul,
+	(2* wkts) - (average * 0.5) + (five_wkt_haul * 10) custom_col
+FROM odi.bowling_clean
+ORDER BY (2* wkts) - (average * 0.5) + (five_wkt_haul * 10) DESC
+
+--Find all-rounders — players who appear in BOTH tables with 1000+ runs AND 50+ wickets.
+
+SELECT 
+	bt.player,
+	bw.country,
+	bt.matches,
+	bt.runs,
+	bw.wkts
+FROM odi.batting_clean bt
+INNER JOIN odi.bowling_clean bw
+ON bt.player = bw.player
+WHERE bw.innings > 0 AND bt.runs > 1000 AND bw.wkts > 50
+ORDER BY  bw.wkts DESC, bt.runs DESC
+
+--ANALYSIS: All players who appeared in both tables with 1000+ runs AND 50+ wickets.
+
+--Who is the greatest all-rounder? Create a combined score using both batting avg and bowling avg.
+
+SELECT TOP 10
+	player,
+	bt_avg,
+	bw_avg,
+	alr_score
+FROM(
+SELECT 
+	bt.player AS player,
+	bt.average AS bt_avg,
+	bw.average AS bw_avg,
+	bt.average - bw.average AS alr_score
+FROM odi.batting_clean bt
+INNER JOIN odi.bowling_clean bw
+ON bt.player = bw.player
+WHERE bw.average > 0 AND bt.runs >= 1000 AND bw.wkts >= 50 
+)t ORDER BY alr_score DESC
+
+--ANALYSIS: Top 10 players with best All rounder score.
+
+--For each country, who is the best batter AND best bowler? Show them side by side.
+
+WITH cta_batsmen AS (
+SELECT 
+	player,
+	country,
+	runs,
+	ROW_NUMBER() OVER(PARTITION BY country ORDER BY runs DESC) bat_rank
+FROM odi.batting_clean
+), cta_bowler AS (
+SELECT 
+	player,
+	country,
+	wkts,
+	ROW_NUMBER() OVER (PARTITION BY country ORDER BY wkts DESC) bowl_rank
+FROM odi.bowling_clean
+)
+
+SELECT 
+	bt.country ,
+	bt.player AS best_batsman,
+	bw.player AS best_bowler
+FROM cta_batsmen bt
+JOIN cta_bowler bw ON bt.country = bw.country
+WHERE bt.bat_rank = 1 AND bw.bowl_rank = 1
+
+--ANALYSIS: All country's best batsmen and best bowler mentioned side by side.
