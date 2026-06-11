@@ -1,7 +1,7 @@
-CRICKET ANALYSIS PROOJECT:
+CRICKET ANALYSIS PROJECT:
 
 Analysis of 5,000+ ODI player records across batting and bowling datasets using SQL Server.
-This project covers the full data pipeline — from raw CSV ingestion to a cleaned schema, business questions, and a Power BI dashboard.
+This project covers the full data pipeline — from raw CSV ingestion to a cleaned schema and business questions.
 
 
 Project Structure:
