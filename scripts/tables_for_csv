@@ -1,0 +1,51 @@
+/*
+
+-------------------------
+DDL SCRIPT: CREATING SCHEMA AND BLANK TABLES.
+-------------------------
+PURPOSE:
+
+THIS SCRIPT WILL CREATE BLANK TABLE WITH COLUMNS UNDER THE ODI SCHEMA.
+RUN THIS TO REDIFINE THE DDL STRUCTURE OF TABLES odi.batting & odi.bowling.
+*/
+
+IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = 'odi')
+BEGIN
+    EXEC('CREATE SCHEMA odi')
+END
+
+
+IF OBJECT_ID('odi.batting', 'U') IS NOT NULL
+    DROP TABLE odi.batting;
+CREATE TABLE odi.batting (
+		player NVARCHAR(50),
+		span NVARCHAR(50),	
+		matches NVARCHAR(50),	
+		innings NVARCHAR(50),	
+		not_outs NVARCHAR(50),	
+		runs INT,	
+		highest_score NVARCHAR(50),
+		average	NVARCHAR(50),
+		balls_faces INT, 	
+		strike_rate NVARCHAR(50),
+		hundereds INT,
+		fifties INT,
+		duck INT
+	);
+IF OBJECT_ID('odi.bowling', 'U') IS NOT NULL
+    DROP TABLE odi.bowling;
+CREATE TABLE odi.bowling (
+		player NVARCHAR(50),
+		span NVARCHAR(50),
+		mat INT,	
+		inns INT,	
+		balls INT,
+		runs INT,	
+		wkts INT,	
+		best_bowling_innings NVARCHAR(50),	
+		average NVARCHAR(50),	
+		economy NVARCHAR(50),	
+		strike_rate NVARCHAR(50),	
+		four_wkt_haul INT,	
+		five_wkt_haul INT
+	);
