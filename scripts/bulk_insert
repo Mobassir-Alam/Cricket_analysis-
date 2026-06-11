@@ -1,0 +1,47 @@
+/*
+=============================================================
+STORED PROCEDURE: LOAD DATA 
+=============================================================
+
+PURPOSE:
+    THIS STORED PROCEDURE WILL LOAD DATA INTO THE 'odi' SCHEM FROM EXTERNAL CSV FILES.
+    IT PERFORMS THE FOLLOWING ACTION:
+     TRUNCATE THE TABLES BEFORE LOADING DATA.
+     USES THE 'BULK INSERT' COMMAND TO LOAD DATA FROM CSV FILES.
+
+PARAMETERS:
+NONE
+
+
+USAGE EXAMPLE:
+    EXEC cricket_data
+*/
+
+CREATE OR ALTER PROCEDURE cricket_data AS 
+BEGIN
+	
+	
+    TRUNCATE TABLE odi.batting;
+
+	BULK INSERT odi.batting 
+	FROM 'D:\Batting_ODI.csv'
+	WITH (
+		FIRSTROW = 2,
+		FIELDTERMINATOR = ',',
+		ROWTERMINATOR = '\n',
+		TABLOCK
+	);
+
+	TRUNCATE TABLE odi.bowling;
+
+	BULK INSERT odi.bowling
+	FROM 'D:\Bowling_ODI.csv'
+	WITH (
+		FIRSTROW = 2,
+		FIELDTERMINATOR = ',',
+		ROWTERMINATOR = '\n',
+		TABLOCK
+	)
+END
+
+EXEC cricket_data
