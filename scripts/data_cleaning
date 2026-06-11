@@ -1,0 +1,151 @@
+/*
+--------------------------------------------------------------
+STORED PROCEDURE: DATA CLEANING 
+--------------------------------------------------------------
+
+PURPOSE:
+THIS STORED PROCEDURE WILL CLEAN ALL THE DATA AND DO ALL NECESSARY DATA TRANSFORMATIONS FOR BOTH THE TABLES
+AFTER CLEANING AND TRANSFORMATION IT WILL INSERT DATA INTO THE CLEAN TABLES.
+
+RUN THIS TO CLEAN DATA AND INSERT INTO THE NEW TABLES.
+
+USAGE EXAMPLE:
+	EXEC cricket_tables
+
+*/
+CREATE OR ALTER PROCEDURE cricket_tables AS
+BEGIN
+	
+    TRUNCATE TABLE odi.batting_clean;
+
+	INSERT INTO odi.batting_clean (
+		player,
+		country,
+		debut_year,
+		last_played,
+		years_played,
+		runs,
+		matches ,	
+		innings ,	
+		not_outs ,	
+		highest_score ,
+		average	,
+		balls_faces , 	
+		strike_rate ,
+		hundereds ,
+		fifties ,
+		duck 
+	)
+	SELECT
+		LEFT(player, CHARINDEX('(', Player) - 2) AS player,
+		CASE WHEN country = 'Asia/SL' OR country = 'Asia/ICC/SL' THEN 'SL'
+			 WHEN country = 'ENG/PNG' OR country = 'ENG/ICC' THEN 'ENG'
+			 WHEN country = 'Asia/INDIA' OR country = 'Asia/ICC/INDIA' THEN 'INDIA'
+			 WHEN country = 'Afr/ICC/SA' OR country = 'Afr/SA' OR country = 'ICC/SA' THEN 'SA'
+			 WHEN country = 'ICC/WI' THEN 'WI'
+			 WHEN country = 'Afr/ZIM' THEN 'ZIM'
+			 WHEN country = 'AUS/ICC' THEN 'AUS'
+			 WHEN country = 'EAf' THEN 'EAF'
+			 WHEN country = 'Asia/BDESH' OR country = 'BDESH' THEN 'BAN'
+			 WHEN country = 'ICC/NZ' THEN 'NZ'
+			 WHEN country = 'Afr/KENYA' THEN 'KENYA'
+			 WHEN country = 'Asia/ICC/PAK' or country = 'Asia/PAK' THEN 'PAK'
+			 WHEN country IN ('1', '3')  THEN 'N/A'
+			 ELSE country 
+		END AS country,
+		debut_year,
+		last_played,
+		CAST(last_played AS int) - CAST(debut_year AS INT) + 1 AS years_played,
+		runs,
+		matches,
+		CASE WHEN innings = '-' THEN 0 ELSE innings END innings,
+		CASE WHEN not_outs = '-' THEN 0 ELSE not_outs END not_outs,
+		CASE WHEN highest_score = '-' THEN 'N/A' ELSE highest_score END highest_score,
+		CASE WHEN average = '-' THEN 0 ELSE CAST(average AS FLOAT) END average,
+		balls_faces,
+		CASE WHEN strike_rate = '-' THEN 0 ELSE CAST(strike_rate AS FLOAT) END strike_rate,
+		hundereds,
+		fifties,
+		duck
+	FROM (
+		SELECT
+			*,
+			SUBSTRING(player, CHARINDEX('(', player) + 1, CHARINDEX(')', player) - CHARINDEX('(', player) - 1) AS country,
+			LEFT(span, 4) AS debut_year,
+			SUBSTRING(span, 6, 9) last_played,
+			ROW_NUMBER() OVER (PARTITION BY player ORDER BY player) first_entry
+	FROM odi.batting
+	)t
+	WHERE first_entry = 1;
+
+	
+	TRUNCATE TABLE odi.bowling_clean;
+
+	INSERT INTO odi.bowling_clean(
+		player,
+		country ,
+		debut_year ,
+		last_played ,
+		years_played ,
+		matches ,	
+		innings ,	
+		runs ,	
+		wkts ,
+		balls,	
+		average ,	
+		economy ,	
+		strike_rate ,	
+		four_wkt_haul ,	
+		five_wkt_haul
+	)
+	SELECT 
+		LEFT(player, CHARINDEX('(', Player) - 2) AS player,
+		CASE WHEN country = 'Asia/SL' OR country = 'Asia/ICC/SL' THEN 'SL'
+			 WHEN country = 'ENG/PNG' OR country = 'ENG/ICC' THEN 'ENG'
+			 WHEN country = 'Asia/INDIA' OR country = 'Asia/ICC/INDIA' THEN 'INDIA'
+			 WHEN country = 'Afr/ICC/SA' OR country = 'Afr/SA' OR country = 'ICC/SA' THEN 'SA'
+			 WHEN country = 'ICC/WI' THEN 'WI'
+			 WHEN country = 'Afr/ZIM' THEN 'ZIM'
+			 WHEN country = 'AUS/ICC' THEN 'AUS'
+			 WHEN country = 'EAf' THEN 'EAF'
+			 WHEN country = 'Asia/BDESH' OR country = 'BDESH' THEN 'BAN'
+			 WHEN country = 'ICC/NZ' THEN 'NZ'
+			 WHEN country = 'Afr/KENYA' THEN 'KENYA'
+			 WHEN country = 'Asia/ICC/PAK' or country = 'Asia/PAK' THEN 'PAK'
+			 WHEN country IN ('1', '3')  THEN 'N/A'
+			 ELSE country 
+		END AS country,
+		debut_year,
+		last_played,
+		CAST(last_played AS int) - CAST(debut_year AS INT) + 1 AS years_played,
+		mat AS matches,
+		inns AS innings,
+		runs AS runs_conceded,
+		wkts,
+		balls AS balls_delivered,
+		avg,
+		eco,
+		sr,
+		four_wkt_haul,
+		five_wkt_haul
+	FROM(
+		SELECT 
+			*,
+			LEFT(span, 4) AS debut_year,
+			SUBSTRING(player, CHARINDEX('(', player) + 1, CHARINDEX(')', player) - CHARINDEX('(', player) - 1) AS country,
+			SUBSTRING(span, 6, 9) last_played,
+			CASE WHEN average = '-' THEN 0 ELSE CAST(average AS float) END AS avg,
+			CASE WHEN economy = '-' THEN 0 ELSE CAST(economy AS float) END AS eco,
+			CASE WHEN strike_rate = '-' THEN 0 ELSE CAST(strike_rate AS float) END AS sr,
+			ROW_NUMBER() OVER(PARTITION BY player ORDER BY wkts DESC) first_entry
+		FROM odi.bowling
+	)t WHERE first_entry = 1 
+
+
+END
+
+	
+
+--EXEC cricket_tables
+
+
