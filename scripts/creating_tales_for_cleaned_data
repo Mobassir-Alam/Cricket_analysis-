@@ -1,0 +1,51 @@
+/*
+------------------------------------------------
+DDL SCRIPT: CREATING TABLES FOR CLEANED DATA
+------------------------------------------------
+
+PURPOSE:
+THIS SCRIPT WILL CREATE NEW TABLES FOR CLEANED DATA.
+
+*/
+
+
+IF OBJECT_ID('odi.batting_clean', 'U') IS NOT NULL
+    DROP TABLE odi.batting_clean;
+CREATE TABLE odi.batting_clean (
+		player NVARCHAR(50),
+		country NVARCHAR(50),
+		debut_year INT,
+		last_played INT,
+		years_played INT,
+		runs INT,
+		matches INT,	
+		innings INT,	
+		not_outs INT,	
+		highest_score NVARCHAR(50),
+		average	FLOAT,
+		balls_faces INT, 	
+		strike_rate FLOAT,
+		hundereds INT,
+		fifties INT,
+		duck INT 
+)
+
+IF OBJECT_ID('odi.bowling_clean', 'U') IS NOT NULL
+	DROP TABLE odi.bowling_clean;
+CREATE TABLE odi.bowling_clean(
+	player NVARCHAR(50),
+	country NVARCHAR(50),
+	debut_year INT,
+	last_played INT,
+	years_played INT,
+	matches INT,	
+	innings INT,	
+	runs INT,	
+	wkts INT,
+	balls INT,	
+	average FLOAT,	
+	economy FLOAT,	
+	strike_rate FLOAT,	
+	four_wkt_haul INT,	
+	five_wkt_haul INT
+)
